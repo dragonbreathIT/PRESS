@@ -1510,6 +1510,8 @@
 
                 const duration = 9000;
                 const startTime = Date.now();
+                let hasShakenJump = false;
+                let hasFlashedGrab = false;
 
                 function animateKidnapping() {
                     const elapsed = Date.now() - startTime;
@@ -1598,6 +1600,12 @@
                         const jumpProgress = (elapsed - 7000) / 1000;
                         const eased = easeOutQuart(jumpProgress);
 
+                        // Intense shake as they jump out
+                        if (!hasShakenJump) {
+                            shake(2.5, 0.2);
+                            hasShakenJump = true;
+                        }
+
                         // Make kidnappers visible
                         kidnapper1.visible = true;
                         kidnapper2.visible = true;
@@ -1621,7 +1629,8 @@
                         kidnapper1.lookAt(camera.position.x, 1, camera.position.z);
                         kidnapper2.lookAt(camera.position.x, 1, camera.position.z);
 
-                        // Slight camera recoil
+                        // Slight camera recoil and tilt
+                        camera.rotation.z = Math.sin(jumpProgress * Math.PI) * 0.1;
                         if (jumpProgress > 0.3) {
                             const recoilProgress = (jumpProgress - 0.3) / 0.7;
                             const recoilEased = Math.sin(recoilProgress * Math.PI);
@@ -1633,6 +1642,12 @@
                     if (elapsed >= 8000 && elapsed < 8800) {
                         const grabProgress = (elapsed - 8000) / 800;
                         const eased = easeInQuart(grabProgress);
+
+                        // Flash on grab
+                        if (!hasFlashedGrab) {
+                            flash(40);
+                            hasFlashedGrab = true;
+                        }
 
                         // Kidnappers rush toward player with acceleration
                         kidnapper1.position.set(
@@ -1651,20 +1666,20 @@
                         kidnapper2.lookAt(camera.position);
 
                         // Camera struggle - violent shaking and rotation
-                        if (grabProgress > 0.3) {
-                            const struggleProgress = (grabProgress - 0.3) / 0.7;
-                            camera.rotation.x = Math.sin(struggleProgress * Math.PI * 6) * 0.4;
-                            camera.rotation.z = Math.sin(struggleProgress * Math.PI * 5) * 0.5;
+                        if (grabProgress > 0.1) {
+                            const struggleProgress = (grabProgress - 0.1) / 0.9;
+                            camera.rotation.x = Math.sin(struggleProgress * Math.PI * 12) * 0.6;
+                            camera.rotation.z = Math.sin(struggleProgress * Math.PI * 10) * 0.7;
                             camera.position.y = 1.7 - Math.pow(struggleProgress, 2) * 0.8;
 
                             // Intense shake
-                            shake(4, 0.05);
+                            shake(10, 0.05);
                         }
                     }
 
                     // Phase 6: Pulled into van / blackout (8.8-9s)
                     if (elapsed >= 8800) {
-                        const blackoutProgress = Math.min((elapsed - 8800) / 200, 1);
+                        const blackoutProgress = Math.min((elapsed - 8800) / 100, 1);
                         const pullEased = easeInQuart(blackoutProgress);
 
                         // Camera pulled toward van violently
@@ -1675,7 +1690,7 @@
                         camera.rotation.z = pullEased * Math.PI * 0.3;
 
                         // Fast fade to black
-                        blackout.style.transition = 'opacity 0.2s';
+                        blackout.style.transition = 'opacity 0.1s';
                         blackout.style.opacity = pullEased;
                     }
 
@@ -1708,11 +1723,9 @@
                 blackout.style.transition = 'opacity 1.5s ease-out';
                 blackout.style.opacity = '0';
 
-                // Start music 1.5s after hallway scene begins
-                setTimeout(() => {
-                    bgMusic.currentTime = 0;
-                    bgMusic.play();
-                }, 1500);
+                // Start music immediately when hallway scene begins
+                bgMusic.currentTime = 0;
+                bgMusic.play();
 
                 headBobEnabled = true;
                 headBobIntensity = 1.2;
@@ -1970,7 +1983,7 @@
                 titleContainer.classList.add('visible');
                 
                 // Letters slam down
-                const timings = [500, 700, 900, 1100, 1300, 1800];
+                const timings = [200, 350, 500, 650, 800, 1100];
                 letters.forEach((letter, i) => {
                     setTimeout(() => {
                         letter.classList.add('visible');
@@ -1981,15 +1994,15 @@
                 // Studio credit
                 setTimeout(() => {
                     studio.classList.add('visible');
-                }, 3000);
+                }, 1500);
                 
                 // Final fade
                 setTimeout(() => {
                     blackout.style.transition = 'opacity 3s ease-in';
                     blackout.style.opacity = '1';
-                }, 10000);
+                }, 5000);
                 
-                setTimeout(resolve, 13000);
+                setTimeout(resolve, 8000);
             });
         }
         
