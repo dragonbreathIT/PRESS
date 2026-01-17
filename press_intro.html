@@ -297,7 +297,399 @@
         }
         
         // ==================== SCENE BUILDERS ====================
-        
+
+        // STREET SCENE (Opening kidnapping)
+        function buildStreetScene() {
+            clearScene();
+
+            scene.fog = new THREE.FogExp2(0x050515, 0.02);
+            scene.background = new THREE.Color(0x020208);
+
+            // Moonlight
+            const moonlight = new THREE.DirectionalLight(0x6688aa, 0.4);
+            moonlight.position.set(-10, 20, -10);
+            moonlight.castShadow = true;
+            moonlight.shadow.mapSize.width = 2048;
+            moonlight.shadow.mapSize.height = 2048;
+            moonlight.shadow.camera.near = 0.5;
+            moonlight.shadow.camera.far = 100;
+            moonlight.shadow.camera.left = -50;
+            moonlight.shadow.camera.right = 50;
+            moonlight.shadow.camera.top = 50;
+            moonlight.shadow.camera.bottom = -50;
+            scene.add(moonlight);
+
+            // Ambient night light
+            const ambient = new THREE.AmbientLight(0x1a1a2a, 0.15);
+            scene.add(ambient);
+
+            // Road
+            const roadGeo = new THREE.PlaneGeometry(12, 100);
+            const roadMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = 0;
+            road.position.x = -3;
+            road.receiveShadow = true;
+            scene.add(road);
+
+            // Road lines
+            const lineGeo = new THREE.PlaneGeometry(0.2, 100);
+            const lineMat = new THREE.MeshBasicMaterial({
+                color: 0x888844,
+                transparent: true,
+                opacity: 0.6
+            });
+            const centerLine = new THREE.Mesh(lineGeo, lineMat);
+            centerLine.rotation.x = -Math.PI / 2;
+            centerLine.position.y = 0.01;
+            centerLine.position.x = -3;
+            scene.add(centerLine);
+
+            // Sidewalk (right side where player walks)
+            const sidewalkGeo = new THREE.PlaneGeometry(3, 100);
+            const sidewalkMat = new THREE.MeshStandardMaterial({
+                color: 0x2a2a2a,
+                roughness: 0.95,
+                metalness: 0
+            });
+            const sidewalk = new THREE.Mesh(sidewalkGeo, sidewalkMat);
+            sidewalk.rotation.x = -Math.PI / 2;
+            sidewalk.position.y = 0.02;
+            sidewalk.position.x = 2.5;
+            sidewalk.receiveShadow = true;
+            scene.add(sidewalk);
+
+            // Sidewalk (left side)
+            const sidewalkLeft = new THREE.Mesh(sidewalkGeo, sidewalkMat);
+            sidewalkLeft.rotation.x = -Math.PI / 2;
+            sidewalkLeft.position.y = 0.02;
+            sidewalkLeft.position.x = -8.5;
+            sidewalkLeft.receiveShadow = true;
+            scene.add(sidewalkLeft);
+
+            // Buildings on right side
+            const buildingMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1520,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+
+            const windowMat = new THREE.MeshStandardMaterial({
+                color: 0x3a3020,
+                emissive: 0x4a4020,
+                emissiveIntensity: 0.3,
+                roughness: 0.2,
+                metalness: 0.3
+            });
+
+            // Create buildings along the street
+            for (let z = -40; z < 20; z += 12) {
+                // Right side building
+                const height = 8 + Math.random() * 6;
+                const buildingGeo = new THREE.BoxGeometry(4, height, 10);
+                const building = new THREE.Mesh(buildingGeo, buildingMat);
+                building.position.set(6, height / 2, z);
+                building.castShadow = true;
+                building.receiveShadow = true;
+                scene.add(building);
+
+                // Windows for right building
+                for (let floor = 0; floor < Math.floor(height / 3); floor++) {
+                    for (let w = 0; w < 3; w++) {
+                        if (Math.random() > 0.3) {
+                            const windowGeo = new THREE.PlaneGeometry(0.8, 1.2);
+                            const window = new THREE.Mesh(windowGeo, windowMat);
+                            window.position.set(4.01, 2 + floor * 3, z - 3 + w * 3);
+                            window.rotation.y = -Math.PI / 2;
+                            scene.add(window);
+
+                            // Some window lights
+                            if (Math.random() > 0.7) {
+                                const windowLight = new THREE.PointLight(0xffaa44, 0.3, 5);
+                                windowLight.position.set(4.5, 2 + floor * 3, z - 3 + w * 3);
+                                scene.add(windowLight);
+                            }
+                        }
+                    }
+                }
+
+                // Left side building
+                const leftHeight = 7 + Math.random() * 5;
+                const leftBuildingGeo = new THREE.BoxGeometry(4, leftHeight, 10);
+                const leftBuilding = new THREE.Mesh(leftBuildingGeo, buildingMat);
+                leftBuilding.position.set(-12, leftHeight / 2, z + 6);
+                leftBuilding.castShadow = true;
+                leftBuilding.receiveShadow = true;
+                scene.add(leftBuilding);
+
+                // Windows for left building
+                for (let floor = 0; floor < Math.floor(leftHeight / 3); floor++) {
+                    for (let w = 0; w < 3; w++) {
+                        if (Math.random() > 0.3) {
+                            const windowGeo = new THREE.PlaneGeometry(0.8, 1.2);
+                            const window = new THREE.Mesh(windowGeo, windowMat);
+                            window.position.set(-10.01, 2 + floor * 3, z + 3 + w * 3);
+                            window.rotation.y = Math.PI / 2;
+                            scene.add(window);
+
+                            if (Math.random() > 0.7) {
+                                const windowLight = new THREE.PointLight(0xffaa44, 0.3, 5);
+                                windowLight.position.set(-10.5, 2 + floor * 3, z + 3 + w * 3);
+                                scene.add(windowLight);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Street lamps
+            const lampPostMat = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                roughness: 0.6,
+                metalness: 0.4
+            });
+
+            for (let z = -30; z < 10; z += 15) {
+                // Right sidewalk lamp
+                const lampPost = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5, 8), lampPostMat);
+                lampPost.position.set(3.5, 2.5, z);
+                lampPost.castShadow = true;
+                scene.add(lampPost);
+
+                // Lamp head
+                const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.3, 8), lampPostMat);
+                lampHead.position.set(3.5, 5.2, z);
+                scene.add(lampHead);
+
+                // Lamp light
+                const lampLight = new THREE.PointLight(0xffaa66, 1.5, 20);
+                lampLight.position.set(3.5, 5, z);
+                lampLight.castShadow = true;
+                scene.add(lampLight);
+
+                // Lamp glow
+                const glowGeo = new THREE.SphereGeometry(0.18, 16, 16);
+                const glowMat = new THREE.MeshBasicMaterial({
+                    color: 0xffcc88,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const glow = new THREE.Mesh(glowGeo, glowMat);
+                glow.position.set(3.5, 5, z);
+                scene.add(glow);
+            }
+
+            // Create the van (initially behind player)
+            const van = createVan();
+            van.position.set(-5, 0, 25);
+            van.rotation.y = Math.PI;
+            scene.add(van);
+            scene.userData.van = van;
+
+            // Create kidnappers (initially hidden in van)
+            const kidnapper1 = createKidnapper();
+            kidnapper1.position.set(-4, 0, 0);
+            kidnapper1.visible = false;
+            scene.add(kidnapper1);
+            scene.userData.kidnapper1 = kidnapper1;
+
+            const kidnapper2 = createKidnapper();
+            kidnapper2.position.set(-6, 0, 0);
+            kidnapper2.visible = false;
+            scene.add(kidnapper2);
+            scene.userData.kidnapper2 = kidnapper2;
+
+            camera.position.set(2.5, 1.7, 0);
+            camera.rotation.set(0, 0, 0);
+            camera.lookAt(2.5, 1.7, -10);
+        }
+
+        // Create van model
+        function createVan() {
+            const vanGroup = new THREE.Group();
+
+            // Main body
+            const bodyGeo = new THREE.BoxGeometry(2.5, 2, 5);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.7,
+                metalness: 0.3
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 1.5;
+            body.castShadow = true;
+            vanGroup.add(body);
+
+            // Cabin
+            const cabinGeo = new THREE.BoxGeometry(2.5, 1.5, 2.2);
+            const cabin = new THREE.Mesh(cabinGeo, bodyMat);
+            cabin.position.set(0, 2.75, 1.6);
+            cabin.castShadow = true;
+            vanGroup.add(cabin);
+
+            // Windshield
+            const windshieldGeo = new THREE.BoxGeometry(2.3, 1.2, 0.1);
+            const windshieldMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a1a,
+                transparent: true,
+                opacity: 0.7,
+                roughness: 0.1,
+                metalness: 0.8
+            });
+            const windshield = new THREE.Mesh(windshieldGeo, windshieldMat);
+            windshield.position.set(0, 2.8, 2.65);
+            windshield.rotation.x = -0.1;
+            vanGroup.add(windshield);
+
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+            const wheelMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a0a,
+                roughness: 0.8
+            });
+
+            const wheelPositions = [
+                { x: -1.1, z: 1.8 },
+                { x: 1.1, z: 1.8 },
+                { x: -1.1, z: -1.8 },
+                { x: 1.1, z: -1.8 }
+            ];
+
+            wheelPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(pos.x, 0.4, pos.z);
+                wheel.castShadow = true;
+                vanGroup.add(wheel);
+            });
+
+            // Headlights
+            const headlightGeo = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+            const headlightMat = new THREE.MeshStandardMaterial({
+                color: 0xffeeaa,
+                emissive: 0xffeeaa,
+                emissiveIntensity: 0.5
+            });
+
+            const leftHeadlight = new THREE.Mesh(headlightGeo, headlightMat);
+            leftHeadlight.position.set(-0.8, 1.2, 2.55);
+            vanGroup.add(leftHeadlight);
+
+            const rightHeadlight = new THREE.Mesh(headlightGeo, headlightMat);
+            rightHeadlight.position.set(0.8, 1.2, 2.55);
+            vanGroup.add(rightHeadlight);
+
+            // Headlight beams
+            const leftBeam = new THREE.SpotLight(0xffeeaa, 2, 30, Math.PI / 6, 0.5);
+            leftBeam.position.set(-0.8, 1.2, 2.6);
+            leftBeam.target.position.set(-0.8, 0, 20);
+            leftBeam.castShadow = true;
+            vanGroup.add(leftBeam);
+            vanGroup.add(leftBeam.target);
+
+            const rightBeam = new THREE.SpotLight(0xffeeaa, 2, 30, Math.PI / 6, 0.5);
+            rightBeam.position.set(0.8, 1.2, 2.6);
+            rightBeam.target.position.set(0.8, 0, 20);
+            rightBeam.castShadow = true;
+            vanGroup.add(rightBeam);
+            vanGroup.add(rightBeam.target);
+
+            // Side door (sliding door on right side)
+            const doorGeo = new THREE.BoxGeometry(0.1, 1.6, 1.8);
+            const doorMat = new THREE.MeshStandardMaterial({
+                color: 0x2a2a2a,
+                roughness: 0.6,
+                metalness: 0.3
+            });
+            const slidingDoor = new THREE.Mesh(doorGeo, doorMat);
+            slidingDoor.position.set(1.3, 1.5, -0.5);
+            slidingDoor.castShadow = true;
+            vanGroup.add(slidingDoor);
+            vanGroup.userData.door = slidingDoor;
+
+            return vanGroup;
+        }
+
+        // Create kidnapper model
+        function createKidnapper() {
+            const kidnapper = new THREE.Group();
+
+            // Dark clothing material
+            const clothingMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a0a,
+                roughness: 0.9,
+                metalness: 0
+            });
+
+            // Body
+            const bodyGeo = new THREE.CylinderGeometry(0.35, 0.4, 1.4, 12);
+            const body = new THREE.Mesh(bodyGeo, clothingMat);
+            body.position.y = 1.2;
+            body.castShadow = true;
+            kidnapper.add(body);
+
+            // Head with balaclava
+            const headGeo = new THREE.SphereGeometry(0.25, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a0a,
+                roughness: 0.85
+            });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 2.1;
+            head.castShadow = true;
+            kidnapper.add(head);
+
+            // Eyes (barely visible)
+            const eyeMat = new THREE.MeshBasicMaterial({
+                color: 0x1a1510,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+            leftEye.position.set(-0.08, 2.12, -0.22);
+            kidnapper.add(leftEye);
+
+            const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+            rightEye.position.set(0.08, 2.12, -0.22);
+            kidnapper.add(rightEye);
+
+            // Arms
+            const armGeo = new THREE.CylinderGeometry(0.12, 0.1, 1, 8);
+
+            const leftArm = new THREE.Mesh(armGeo, clothingMat);
+            leftArm.position.set(-0.5, 1.2, 0);
+            leftArm.rotation.z = 0.3;
+            leftArm.castShadow = true;
+            kidnapper.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeo, clothingMat);
+            rightArm.position.set(0.5, 1.2, 0);
+            rightArm.rotation.z = -0.3;
+            rightArm.castShadow = true;
+            kidnapper.add(rightArm);
+
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.15, 0.13, 1, 8);
+
+            const leftLeg = new THREE.Mesh(legGeo, clothingMat);
+            leftLeg.position.set(-0.2, 0.5, 0);
+            leftLeg.castShadow = true;
+            kidnapper.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeo, clothingMat);
+            rightLeg.position.set(0.2, 0.5, 0);
+            rightLeg.castShadow = true;
+            kidnapper.add(rightLeg);
+
+            return kidnapper;
+        }
+
         // HALLWAY SCENE
         function buildHallwayScene() {
             clearScene();
@@ -882,10 +1274,13 @@
         }
         
         // ==================== SCENES ====================
-        
+
         async function runIntro() {
             skip.classList.add('visible');
-            
+
+            // SCENE 0: Kidnapping (0-9s)
+            await runKidnappingScene();
+
             // SCENE 1: Hallway chase (0-5s)
             await runHallwayChase();
             
@@ -907,11 +1302,183 @@
             // SCENE 7: Title (21-32s)
             await runTitleReveal();
         }
-        
+
+        function runKidnappingScene() {
+            return new Promise(resolve => {
+                buildStreetScene();
+
+                const van = scene.userData.van;
+                const kidnapper1 = scene.userData.kidnapper1;
+                const kidnapper2 = scene.userData.kidnapper2;
+                const door = van.userData.door;
+
+                // Enable head bob for walking
+                headBobEnabled = true;
+                headBobIntensity = 0.8;
+                headBobSpeed = 1;
+
+                const duration = 9000;
+                const startTime = Date.now();
+
+                function animateKidnapping() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Phase 1: Walking forward (0-2s)
+                    if (elapsed < 2000) {
+                        const walkProgress = elapsed / 2000;
+                        camera.position.z = -walkProgress * 3;
+                        camera.lookAt(2.5, 1.7, camera.position.z - 10);
+                    }
+
+                    // Phase 2: Van approaches from behind (2-5s)
+                    if (elapsed >= 2000 && elapsed < 5000) {
+                        const vanProgress = (elapsed - 2000) / 3000;
+                        const eased = vanProgress * vanProgress;
+
+                        // Van drives up from behind and moves alongside
+                        van.position.z = 25 - eased * 28;
+                        van.position.x = -5 + eased * 2;
+
+                        // Player continues walking but slower
+                        camera.position.z = -3 - (elapsed - 2000) / 3000 * 2;
+                        camera.lookAt(2.5, 1.7, camera.position.z - 10);
+
+                        // Player starts to notice and look toward van
+                        if (elapsed > 4000) {
+                            const lookProgress = (elapsed - 4000) / 1000;
+                            camera.lookAt(
+                                2.5 - lookProgress * 5,
+                                1.7,
+                                camera.position.z - 5
+                            );
+                        }
+                    }
+
+                    // Phase 3: Van stops, door opens (5-6s)
+                    if (elapsed >= 5000 && elapsed < 6000) {
+                        headBobEnabled = false;
+                        const doorProgress = (elapsed - 5000) / 1000;
+
+                        // Stop van completely
+                        van.position.z = -3;
+                        van.position.x = -3;
+
+                        // Player stops walking
+                        camera.position.z = -5;
+
+                        // Look at van
+                        camera.lookAt(-3, 1.5, -3);
+
+                        // Slide door open
+                        door.position.x = 1.3 + doorProgress * 1.5;
+                    }
+
+                    // Phase 4: Kidnappers jump out (6-7s)
+                    if (elapsed >= 6000 && elapsed < 7000) {
+                        const jumpProgress = (elapsed - 6000) / 1000;
+                        const eased = jumpProgress * jumpProgress;
+
+                        // Make kidnappers visible
+                        kidnapper1.visible = true;
+                        kidnapper2.visible = true;
+
+                        // Kidnappers jump out from van
+                        kidnapper1.position.set(
+                            -3 + eased * 4,
+                            Math.sin(jumpProgress * Math.PI) * 0.3,
+                            -3 + eased * 1
+                        );
+
+                        kidnapper2.position.set(
+                            -3 + eased * 5,
+                            Math.sin(jumpProgress * Math.PI) * 0.3,
+                            -3.5 + eased * 0.5
+                        );
+
+                        // Both face toward player
+                        kidnapper1.lookAt(camera.position.x, 1, camera.position.z);
+                        kidnapper2.lookAt(camera.position.x, 1, camera.position.z);
+                    }
+
+                    // Phase 5: Kidnappers grab player (7-8.5s)
+                    if (elapsed >= 7000 && elapsed < 8500) {
+                        const grabProgress = (elapsed - 7000) / 1500;
+                        const eased = grabProgress * grabProgress * grabProgress;
+
+                        // Kidnappers rush toward player
+                        kidnapper1.position.set(
+                            1 + eased * 1.5,
+                            0,
+                            -2 - eased * 3
+                        );
+
+                        kidnapper2.position.set(
+                            1 + eased * 1.5,
+                            0,
+                            -3.5 - eased * 1.5
+                        );
+
+                        kidnapper1.lookAt(camera.position);
+                        kidnapper2.lookAt(camera.position);
+
+                        // Camera struggle - violent shaking and rotation
+                        if (elapsed > 7500) {
+                            const struggleProgress = (elapsed - 7500) / 1000;
+                            camera.rotation.x = Math.sin(struggleProgress * Math.PI * 4) * 0.3;
+                            camera.rotation.z = Math.sin(struggleProgress * Math.PI * 3) * 0.4;
+                            camera.position.y = 1.7 - struggleProgress * 0.5;
+
+                            // Shake effect
+                            shake(3, 0.1);
+                        }
+                    }
+
+                    // Phase 6: Pulled into van / blackout (8.5-9s)
+                    if (elapsed >= 8500) {
+                        const blackoutProgress = (elapsed - 8500) / 500;
+
+                        // Camera pulled toward van
+                        camera.position.x = 2.5 - blackoutProgress * 5.5;
+                        camera.position.z = -5 + blackoutProgress * 2;
+                        camera.position.y = 1.7 - blackoutProgress * 0.7;
+                        camera.rotation.x = blackoutProgress * Math.PI * 0.3;
+                        camera.rotation.z = blackoutProgress * Math.PI * 0.2;
+
+                        // Fade to black
+                        blackout.style.transition = 'opacity 0.5s';
+                        blackout.style.opacity = blackoutProgress;
+                    }
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animateKidnapping);
+                    }
+                }
+
+                animateKidnapping();
+
+                // Final blackout
+                setTimeout(() => {
+                    blackout.style.opacity = '1';
+                }, 8500);
+
+                // Transition message (optional)
+                setTimeout(() => {
+                    headBobEnabled = false;
+                    camera.rotation.set(0, 0, 0);
+                    resolve();
+                }, duration);
+            });
+        }
+
         function runHallwayChase() {
             return new Promise(resolve => {
                 buildHallwayScene();
-                
+
+                // Fade in from black (waking up after kidnapping)
+                blackout.style.transition = 'opacity 1.5s ease-out';
+                blackout.style.opacity = '0';
+
                 headBobEnabled = true;
                 headBobIntensity = 1.2;
                 headBobSpeed = 1.3;
